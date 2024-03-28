@@ -20,5 +20,7 @@ func (app *Config) routes() http.Handler {
 
 	mux.Use(cors.Default())
 
+	mux.GET("/", app.Broker)
+
 	return mux
 }
