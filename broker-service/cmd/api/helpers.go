@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,8 @@ func (app *Config) ReadJson(c *gin.Context, data any) error {
 func (app *Config) WriteJson(c *gin.Context, status int, data any, headers ...map[string]string) error {
 	out, err := json.Marshal(data)
 
+	fmt.Println(data)
+
 	if err != nil {
 		return err
 	}
@@ -52,4 +55,19 @@ func (app *Config) WriteJson(c *gin.Context, status int, data any, headers ...ma
 	}
 
 	return nil
+}
+
+func (app *Config) ErrorJson(c *gin.Context, err error, status ...int) {
+	statusCode := http.StatusBadRequest
+
+	if len(status) > 0 {
+		statusCode = status[0]
+	}
+
+	var res jsonResponse
+
+	res.Error = true
+	res.Message = err.Error()
+
+	app.WriteJson(c, statusCode, res)
 }
