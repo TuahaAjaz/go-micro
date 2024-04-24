@@ -53,11 +53,16 @@ func main() {
 func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", dsn)
 
+	// fmt.Println("Before ping")
+
 	if err != nil {
 		return nil, err
 	}
 
 	err = db.Ping()
+
+	// fmt.Println("After ping")
+	// fmt.Println(err.Error())
 
 	if err != nil {
 		return nil, err
@@ -68,6 +73,8 @@ func openDB(dsn string) (*sql.DB, error) {
 
 func connectToDB() *sql.DB {
 	dsn := os.Getenv("DSN")
+
+	fmt.Println(dsn)
 
 	for {
 		connection, err := openDB(dsn)
