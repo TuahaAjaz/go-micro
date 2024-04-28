@@ -20,7 +20,7 @@ func (app *Config) routes() http.Handler {
 
 	mux.Use(cors.Default())
 
-	// mux.POST("/", app.Models.User.Insert())
+	mux.POST("/authenticate", app.Authenticate)
 
 	return mux
 }

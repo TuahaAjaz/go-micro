@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -52,16 +53,22 @@ func (app *Config) Authenticate(c *gin.Context) {
 	user, err := app.Models.User.GetByEmail(requestPayload.Email)
 
 	if err != nil {
-		app.ErrorJson(c, errors.New("Invalid Credentials"), http.StatusBadRequest)
+		app.ErrorJson(c, errors.New("invalid credentials"), http.StatusBadRequest)
 		return
 	}
 
 	valid, err := app.Models.User.PasswordMatches(requestPayload.Password)
 
 	if err != nil || !valid {
-		app.ErrorJson(c, errors.New("Invalid Credentials"), http.StatusBadRequest)
+		app.ErrorJson(c, errors.New("invalid credentials"), http.StatusBadRequest)
 		return
 	}
 
-	app.WriteJson(c, 200, user)
+	payload := jsonResponse{
+		Error:   false,
+		Message: fmt.Sprintf("Logged in user %s", user.Email),
+		Data:    user,
+	}
+
+	app.WriteJson(c, 200, payload)
 }

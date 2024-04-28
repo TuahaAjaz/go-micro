@@ -29,7 +29,7 @@ build_broker:
 	@echo Done!
 
 ## build_auth: builds the auth binary as a linux executable
-build_broker:
+build_auth:
 	@echo Building auth binary...
 	chdir ..\authentication-service && set GOOS=linux&& set GOARCH=amd64&& set CGO_ENABLED=0 && go build -o ${AUTH_BINARY} ./cmd/api
 	@echo Done!
