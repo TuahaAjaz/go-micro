@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -84,6 +85,7 @@ func (u *User) GetAll() ([]*User, error) {
 
 // GetByEmail returns one user by email
 func (u *User) GetByEmail(email string) (*User, error) {
+	fmt.Println("Email => ", email)
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -102,6 +104,8 @@ func (u *User) GetByEmail(email string) (*User, error) {
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
+
+	fmt.Println(user)
 
 	if err != nil {
 		return nil, err
@@ -253,7 +257,10 @@ func (u *User) ResetPassword(password string) error {
 // with the hash we have stored for a given user in the database. If the password
 // and hash match, we return true; otherwise, we return false.
 func (u *User) PasswordMatches(plainText string) (bool, error) {
+	fmt.Println("Password => ", plainText)
+	fmt.Println("User => ", u, "Password =>", []byte(u.Password))
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(plainText))
+	fmt.Println(err)
 	if err != nil {
 		switch {
 		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):

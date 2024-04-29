@@ -16,10 +16,10 @@ type jsonResponse struct {
 
 func (app *Config) ReadJson(c *gin.Context, data any) error {
 	// Declare a variable to store the JSON data as a raw message
-	var rawData json.RawMessage
+	// var rawData json.RawMessage
 
 	// Decode the JSON data from the request body
-	err := json.NewDecoder(c.Request.Body).Decode(&rawData)
+	err := json.NewDecoder(c.Request.Body).Decode(data)
 	if err != nil {
 		// Handle error if decoding JSON data fails
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

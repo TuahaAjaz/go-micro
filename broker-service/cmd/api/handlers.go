@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,19 @@ type AuthPayload struct {
 }
 
 func (app *Config) Broker(c *gin.Context) {
+	var requestPayload struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	err := app.ReadJson(c, &requestPayload)
+
+	fmt.Println(requestPayload)
+
+	if err != nil {
+		app.ErrorJson(c, errors.New("error reading json"))
+	}
+
 	payload := jsonResponse{
 		Error:   false,
 		Message: "Broker is up",
@@ -36,6 +50,9 @@ func (app *Config) HandleSubmission(c *gin.Context) {
 		app.ErrorJson(c, err)
 	}
 
+	fmt.Println("RequestPayload => ", requestPayload)
+	fmt.Println("AuthPayload in handleSubmission =>", requestPayload.Auth)
+
 	switch requestPayload.Action {
 	case "auth":
 		app.authenticate(c, requestPayload.Auth)
@@ -46,7 +63,9 @@ func (app *Config) HandleSubmission(c *gin.Context) {
 
 func (app *Config) authenticate(c *gin.Context, authPayload AuthPayload) {
 	//Create some json  we'll send to the auth service
+	fmt.Println("AuthPayload in authenticate =>", authPayload)
 	jsonRequest, _ := json.MarshalIndent(authPayload, "", "\t")
+	fmt.Println("JSON Request=> ", jsonRequest)
 
 	//call the service
 	request, err := http.NewRequest("POST", "http://authentication-service/authenticate", bytes.NewBuffer(jsonRequest))
@@ -57,6 +76,7 @@ func (app *Config) authenticate(c *gin.Context, authPayload AuthPayload) {
 
 	client := &http.Client{}
 	response, err := client.Do(request)
+	fmt.Println("Response => ", response)
 	if err != nil {
 		app.ErrorJson(c, err)
 		return
@@ -75,6 +95,7 @@ func (app *Config) authenticate(c *gin.Context, authPayload AuthPayload) {
 	var authResponse jsonResponse
 
 	err = json.NewDecoder(response.Body).Decode(&authResponse)
+	fmt.Println("AuthResponse => ", authResponse)
 
 	if authResponse.Error {
 		app.ErrorJson(c, err, http.StatusUnauthorized)

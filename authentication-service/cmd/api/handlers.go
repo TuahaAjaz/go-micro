@@ -45,6 +45,8 @@ func (app *Config) Authenticate(c *gin.Context) {
 
 	err := app.ReadJson(c, &requestPayload)
 
+	fmt.Println("RequestPayload in Auth service => ", requestPayload)
+
 	if err != nil {
 		app.ErrorJson(c, err, http.StatusBadRequest)
 		return
@@ -53,14 +55,14 @@ func (app *Config) Authenticate(c *gin.Context) {
 	user, err := app.Models.User.GetByEmail(requestPayload.Email)
 
 	if err != nil {
-		app.ErrorJson(c, errors.New("invalid credentials"), http.StatusBadRequest)
+		app.ErrorJson(c, errors.New("invalid credentials"), http.StatusUnauthorized)
 		return
 	}
 
-	valid, err := app.Models.User.PasswordMatches(requestPayload.Password)
+	valid, err := user.PasswordMatches(requestPayload.Password)
 
 	if err != nil || !valid {
-		app.ErrorJson(c, errors.New("invalid credentials"), http.StatusBadRequest)
+		app.ErrorJson(c, errors.New("invalid credentials"), http.StatusUnauthorized)
 		return
 	}
 
@@ -70,5 +72,5 @@ func (app *Config) Authenticate(c *gin.Context) {
 		Data:    user,
 	}
 
-	app.WriteJson(c, 200, payload)
+	app.WriteJson(c, http.StatusAccepted, payload)
 }
