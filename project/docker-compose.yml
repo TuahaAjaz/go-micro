@@ -45,3 +45,14 @@ services:
         max-file: "3"  
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
+
+  mongo: 
+    image: 'mongo:4.2.16-bionic'
+    ports: 
+      - "27016:27016"
+    environment:
+      MONGO_INNITDB_DATABASE: logs
+      MONGO_INNITDB_ROOT_USERNAME: admin
+      MONGO_INNITDB_ROOT_PASSWORD: password
+    volumes:
+      - ./db-data/mongo/:/data/db
