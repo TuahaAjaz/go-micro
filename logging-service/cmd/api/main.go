@@ -30,6 +30,8 @@ func main() {
 	mongoClient, err := connectToMongo()
 	if err != nil {
 		log.Panic("Error connecting to Mongo", err)
+	} else {
+		fmt.Println("Connected to mongo!")
 	}
 	client = mongoClient
 
@@ -47,18 +49,27 @@ func main() {
 		Models: data.New(client),
 	}
 
-	go app.service()
+	log.Printf("Starting logger service on port %s", webPort)
+
+	app.service()
 }
 
 func (app *Config) service() {
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("Server starting at port %s", webPort),
+		Addr:    fmt.Sprintf(":%s", webPort),
 		Handler: app.routes(),
 	}
 
+	// go func() {
+	// 	<-ctx.Done()
+	// 	if err := srv.Shutdown(context.Background()); err != nil {
+	// 		log.Println("Server shutdown error:", err)
+	// 	}
+	// }()
+
 	err := srv.ListenAndServe()
-	if err != nil {
-		log.Panic("Error connecting to server")
+	if err != nil && err != http.ErrServerClosed {
+		log.Panic("Error starting server:", err)
 	}
 }
 
