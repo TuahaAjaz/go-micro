@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -8,16 +9,17 @@ import (
 	"github.com/username/log-service/data"
 )
 
-type requestPayload struct {
+type RequestPayload struct {
 	Name string `json:"name"`
 	Data string `json:"data"`
 }
 
 func (app *Config) WriteLog(c *gin.Context) {
-	var requestPayload requestPayload
+	var requestPayload RequestPayload
 	err := app.ReadJson(c, &requestPayload)
 	if err != nil {
 		fmt.Print("error reading json: ", err)
+		app.ErrorJson(c, errors.New("error reading json"))
 		return
 	}
 
@@ -29,6 +31,7 @@ func (app *Config) WriteLog(c *gin.Context) {
 	err = app.Models.LogEntry.Insert(event)
 	if err != nil {
 		fmt.Print("error inserting data: ", err)
+		app.ErrorJson(c, err)
 		return
 	}
 
@@ -38,5 +41,5 @@ func (app *Config) WriteLog(c *gin.Context) {
 		Data:    event,
 	}
 
-	app.WriteJson(c, http.StatusOK, resp)
+	app.WriteJson(c, http.StatusAccepted, resp)
 }

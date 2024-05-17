@@ -13,6 +13,12 @@ import (
 type RequestPayload struct {
 	Action string      `json:"action"`
 	Auth   AuthPayload `json:"auth"`
+	Log    LogPayload  `json:"log"`
+}
+
+type LogPayload struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
 }
 
 type AuthPayload struct {
@@ -50,15 +56,75 @@ func (app *Config) HandleSubmission(c *gin.Context) {
 		app.ErrorJson(c, err)
 	}
 
-	fmt.Println("RequestPayload => ", requestPayload)
+	fmt.Println("Log Payload in RequestPayload => ", requestPayload.Log)
 	fmt.Println("AuthPayload in handleSubmission =>", requestPayload.Auth)
 
 	switch requestPayload.Action {
 	case "auth":
 		app.authenticate(c, requestPayload.Auth)
+	case "log":
+		app.log(c, requestPayload.Log)
 	default:
 		app.ErrorJson(c, errors.New("unknown action"))
 	}
+}
+
+func (app *Config) log(c *gin.Context, logPayload LogPayload) {
+	//Marshal payload
+	fmt.Println("Unmarshalled Log Payload => ", logPayload)
+	fmt.Println(logPayload.Name)
+	fmt.Println(logPayload.Data)
+	marshalledLogPayload, err := json.MarshalIndent(logPayload, "", "\t")
+	if err != nil {
+		fmt.Println(err)
+		app.ErrorJson(c, err)
+		return
+	}
+	fmt.Println("JSON Request=> ", marshalledLogPayload)
+
+	//Create Request
+	request, err := http.NewRequest("POST", "http://logger-service/logs", bytes.NewBuffer(marshalledLogPayload))
+	if err != nil {
+		fmt.Println(err)
+		app.ErrorJson(c, err)
+		return
+	}
+
+	//initialize Client to make request and send request to log service
+	client := &http.Client{}
+
+	response, err := client.Do(request)
+	if err != nil {
+		fmt.Println(err)
+		app.ErrorJson(c, err)
+		return
+	}
+	fmt.Println("Response => ", response)
+	defer response.Body.Close()
+
+	//Check for bad request
+	if response.StatusCode != http.StatusAccepted {
+		fmt.Println(err)
+		app.ErrorJson(c, errors.New("error in handling log request"), http.StatusBadRequest)
+		return
+	}
+
+	//unmarshall response and send to client
+	var writeResponse jsonResponse
+	err = json.NewDecoder(response.Body).Decode(&writeResponse)
+	if err != nil {
+		fmt.Println(err)
+		app.ErrorJson(c, err)
+		return
+	}
+
+	if writeResponse.Error {
+		fmt.Println(writeResponse.Message)
+		app.ErrorJson(c, errors.New(writeResponse.Message))
+		return
+	}
+
+	app.WriteJson(c, http.StatusAccepted, writeResponse)
 }
 
 func (app *Config) authenticate(c *gin.Context, authPayload AuthPayload) {

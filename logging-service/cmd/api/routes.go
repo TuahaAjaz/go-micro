@@ -20,7 +20,7 @@ func (app *Config) routes() http.Handler {
 
 	mux.Use(cors.Default())
 
-	mux.POST("/log", app.WriteLog)
+	mux.POST("/logs", app.WriteLog)
 
 	return mux
 }
