@@ -14,6 +14,7 @@ type RequestPayload struct {
 	Action string      `json:"action"`
 	Auth   AuthPayload `json:"auth"`
 	Log    LogPayload  `json:"log"`
+	Mail   MailPayload `json:"mail"`
 }
 
 type LogPayload struct {
@@ -24,6 +25,13 @@ type LogPayload struct {
 type AuthPayload struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type MailPayload struct {
+	From    string `json:"from"`
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Message string `json:"message"`
 }
 
 func (app *Config) Broker(c *gin.Context) {
@@ -56,17 +64,65 @@ func (app *Config) HandleSubmission(c *gin.Context) {
 		app.ErrorJson(c, err)
 	}
 
-	fmt.Println("Log Payload in RequestPayload => ", requestPayload.Log)
+	fmt.Println("Log Payload in handleSubmission => ", requestPayload.Log)
 	fmt.Println("AuthPayload in handleSubmission =>", requestPayload.Auth)
+	fmt.Println("MailPayload in handleSubmission => ", requestPayload.Mail)
 
 	switch requestPayload.Action {
 	case "auth":
 		app.authenticate(c, requestPayload.Auth)
 	case "log":
 		app.log(c, requestPayload.Log)
+	case "mail":
+		app.mail(c, requestPayload.Mail)
 	default:
 		app.ErrorJson(c, errors.New("unknown action"))
 	}
+}
+
+func (app *Config) mail(c *gin.Context, mailPayload MailPayload) {
+	jsonPayload, err := json.MarshalIndent(mailPayload, "", "\t")
+	if err != nil {
+		fmt.Println("Error while marshaliing data, ", err)
+		app.ErrorJson(c, err)
+		return
+	}
+
+	request, err := http.NewRequest("POST", "http://mail-service/send", bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		fmt.Println("Error while creating request, ", err)
+		app.ErrorJson(c, err)
+		return
+	}
+
+	client := &http.Client{}
+
+	response, err := client.Do(request)
+	fmt.Println("Response => ", response)
+	if err != nil || response.StatusCode != http.StatusAccepted {
+		fmt.Println("error while creating request, ", err)
+		app.ErrorJson(c, err)
+		return
+	}
+
+	defer response.Body.Close()
+
+	//unmarshall response and send to client
+	var writeResponse jsonResponse
+	err = json.NewDecoder(response.Body).Decode(&writeResponse)
+	if err != nil {
+		fmt.Println(err)
+		app.ErrorJson(c, err)
+		return
+	}
+
+	if writeResponse.Error {
+		fmt.Println(writeResponse.Message)
+		app.ErrorJson(c, errors.New(writeResponse.Message))
+		return
+	}
+
+	app.WriteJson(c, http.StatusAccepted, writeResponse)
 }
 
 func (app *Config) log(c *gin.Context, logPayload LogPayload) {

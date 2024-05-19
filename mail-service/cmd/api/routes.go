@@ -19,6 +19,7 @@ func (app *Config) routes() http.Handler {
 	config.MaxAge = 300
 
 	mux.Use(cors.Default())
+	mux.POST("/send", app.SendMail)
 
 	return mux
 }
