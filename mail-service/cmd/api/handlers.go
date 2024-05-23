@@ -8,7 +8,7 @@ import (
 )
 
 func (app *Config) SendMail(c *gin.Context) {
-	fmt.Println("Sending Mail...")
+	fmt.Println("Sending Maillll...")
 	var requestPayload struct {
 		From    string `json:"from"`
 		To      string `json:"to"`
@@ -32,7 +32,7 @@ func (app *Config) SendMail(c *gin.Context) {
 
 	err = app.Mailer.SendSMTPMessage(msg)
 	if err != nil {
-		fmt.Println("error sending mail: ", err)
+		fmt.Println("error in mail service: ", err)
 		app.ErrorJson(c, err)
 		return
 	}

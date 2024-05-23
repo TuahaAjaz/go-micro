@@ -14,6 +14,7 @@ func main() {
 	app := Config{}
 
 	log.Printf("Starting broker service on port %s \n", webPort)
+	log.Print("Up and running")
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", webPort),

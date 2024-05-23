@@ -81,6 +81,8 @@ func (app *Config) HandleSubmission(c *gin.Context) {
 }
 
 func (app *Config) mail(c *gin.Context, mailPayload MailPayload) {
+	fmt.Println("Sending mail!!!")
+
 	jsonPayload, err := json.MarshalIndent(mailPayload, "", "\t")
 	if err != nil {
 		fmt.Println("Error while marshaliing data, ", err)
@@ -99,9 +101,14 @@ func (app *Config) mail(c *gin.Context, mailPayload MailPayload) {
 
 	response, err := client.Do(request)
 	fmt.Println("Response => ", response)
-	if err != nil || response.StatusCode != http.StatusAccepted {
+	if err != nil {
 		fmt.Println("error while creating request, ", err)
 		app.ErrorJson(c, err)
+		return
+	}
+
+	if response.StatusCode != http.StatusAccepted {
+		app.ErrorJson(c, errors.New("error in mail service"))
 		return
 	}
 
