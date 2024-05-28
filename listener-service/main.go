@@ -19,7 +19,7 @@ func main() {
 	}
 	defer rabbitConn.Close()
 
-	log.Println("Connecte to rabbimq successfully")
+	log.Println("Connecte to rabbitmq successfully")
 	// Listen for events
 
 	// Create a consumer
